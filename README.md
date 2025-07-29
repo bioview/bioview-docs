@@ -1,0 +1,2 @@
+# configurator
+Device configuration utility
