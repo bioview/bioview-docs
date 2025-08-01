@@ -1,0 +1,24 @@
+[project]
+name = "bioview-docs"
+version = "0.9.3"
+description = "Documentation for the BioView project"
+authors = [
+    {name = "Aakash Kapoor",email = "113218196+meowkash@users.noreply.github.com"}
+]
+license = {text = "GPL-v3"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.16"
+mkdocstrings = "^0.30.0"
+mkdocstrings-python = "^1.16.12"
+

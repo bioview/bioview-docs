@@ -1,0 +1,170 @@
+# Copyright (c) 2025 Aakash Kapoor
+
+# This program is free software: you can redistribute it and/or modify it 
+# under the terms of the GNU General Public License as published by the 
+# Free Software Foundation, version 3.
+
+# This program is distributed in the hope that it will be useful, but 
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License 
+# for more details.
+
+# You should have received a copy of the GNU General Public License along 
+# with this program. If not, see https://www.gnu.org/licenses/.
+
+# Project information
+site_name: BioView
+site_url: https://bioview.readthedocs.io
+site_author: Aakash Kapoor
+site_description: >-
+  BioView is a versatile, extensible, and performant cross-platform app for biomedical and human-computer interface instrumentation control, including Ettus USRPs and BIOPAC devices.
+
+# Repository
+repo_name: bioview-docs
+repo_url: https://github.com/bioview/bioview-docs
+
+# Copyright
+copyright: Copyright &copy; 2025 Aakash Kapoor
+
+# Configuration
+theme:
+  name: material
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    # - content.footnote.tooltips
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.instant.prefetch
+    # - navigation.instant.progress
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+  font:
+    text: Inter
+    code: Inter Mono
+  favicon: assets/icon.png
+  logo: assets/icon.png
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/meowkash
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/bioview/
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - includes/mkdocs.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - About:
+    - index.md
+    - Features: about/features.md
+    - Considerations: about/considerations.md
+    - Troubleshooting: about/troubleshooting.md
+    - License: about/license.md
+    - Versions:
+      - Changelog: about/changelog.md
+      - How to upgrade: about/upgrading.md
+  - Getting Started:
+    - Installation: setup/installation.md
+  - Reference:
+    - reference/index.md
+    - Device API: reference/devices.md
+    - User Interface: reference/ui.md
+    - Supported Devices: 
+      - USRP: reference/usrp.md
+      - BIOPAC: reference/biopac.md
+  - Examples:
+    - usage/index.md
+    - Basic Demo: usage/basic-demo.md
+  - Contributing:
+    - Guidelines: 
+      - Code Style: contributing/code-style.md
+      - Build Instructions: contributing/build-instructions.md 
+    - Reporting Issues: 
+      - Bugs: contributing/bug-report.md
+      - Documentation Issue: contributing/docs-issue.md
+      - Feature Change/Request: contributing/feature-request.md
