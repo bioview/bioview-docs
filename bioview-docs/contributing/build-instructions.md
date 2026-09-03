@@ -1,57 +1,84 @@
-# 🛠️ Build Instructions
-
-To begin working with **BioView**, you'll need to set up the application in a local, editable environment with all necessary dependencies. The installation process is cross-platform and takes care of Python versioning, virtual environments, and UHD (USRP Hardware Driver) dependencies.
+# Development setup
 
 ## Prerequisites
 
-* **Git** must be installed and available in your system path.
-* On **Windows**, use **Git Bash** or **PowerShell**.
-  On **macOS** and **Linux**, use your default terminal.
-* **Python 3.12** is required. If not available, the installer will attempt to install it for you.
+* **Git**, on `PATH`. On Windows use Git Bash or PowerShell.
+* **Python 3.12** (the packages require `>=3.12, <3.14`).
+* **UHD with Python bindings**, if you are working on the USRP backend. It is
+  usually supplied by the Ettus installer rather than pip.
+* **BHAPI (`mpdev.dll`)**, Windows only, if you are working on the BIOPAC
+  backend.
 
-## Steps
+## Setting up
 
-Clone the repository and run the installation script:
-
-```bash
-# Clone the repository
-git clone https://github.com/meowkash/bioview.git
-cd bioview
-
-# Make the script executable (if needed)
-chmod +x install.sh
-
-# Run the installation
-./install.sh
-```
-
-This script performs the following tasks:
-
-1. **Ensures Python 3.12 is installed**:
-
-   * Uses system package managers (APT, DNF, Homebrew, Scoop, etc.) based on your OS.
-   * On Windows, will attempt to use `winget` or prompt for manual installation.
-
-2. **Installs tooling**:
-
-   * Installs `pipx`, `virtualenv`, and `poetry` for environment and dependency management.
-
-3. **Installs project dependencies**:
-   * Sets up a virtual environment, located at `$HOME/.bioview/venv`, to isolate from system `python`.
-   * Uses `poetry install` to install all declared dependencies from `pyproject.toml`.
-
-4. **Installs UHD (USRP Hardware Driver)**:
-
-   * On Linux/macOS: installs via package manager (`apt`, `dnf`, `macports`).
-   * On Windows: prompts for manual download and installation via Ettus website ([UHD Downloads](https://files.ettus.com/binaries/uhd/latest_release/)).
-   * *For other operating systems, we recommend manually building `uhd` following instructions from Ettus*
-
-After successful installation, activate the virtual environment:
+From a checkout containing `bioview-common`, `bioview-server` and
+`bioview-client` side by side:
 
 ```bash
-# macOS/Linux
-source ~/.bioview/venv/bin/activate
-
-# Windows
-source ~/.bioview/venv/Scripts/activate
+python setup_dev.py
 ```
+
+That creates `.venv`, installs the three packages into it in editable mode plus
+the test tooling, and writes `.vscode/launch.json` and `.vscode/settings.json`
+pointing at that interpreter. It is stdlib-only, so it runs on a bare
+interpreter before anything is installed.
+
+Install order matters and the script handles it: `bioview-common` is imported by
+both of the others but is not declared as a dependency of either, so it goes
+first.
+
+Options:
+
+```bash
+python setup_dev.py --recreate      # rebuild the venv from scratch
+python setup_dev.py --run-tests     # verify by running the suites
+python setup_dev.py --with-biopac   # (re)assert the Windows BIOPAC dep (wmi)
+python setup_dev.py --with-uhd      # try to pip-install the UHD bindings
+python setup_dev.py --no-vscode     # skip writing .vscode/
+```
+
+Editable installs mean source edits take effect immediately; only dependency
+changes need a re-run.
+
+## Running it
+
+```bash
+python -m bioview_client.launch --role monitor
+python -m bioview_client.launch --role configurator
+```
+
+Each window starts, or reuses, its own localhost server. There is no separate
+"start the server first" step.
+
+To debug the server, use the VS Code configurations: both have
+`"subProcess": true`, so the debugger attaches to the server the window spawns
+and breakpoints in server code are hit.
+
+To run the server by hand anyway:
+
+```bash
+python -m bioview_server.server --local
+```
+
+A window will then find and reuse it rather than starting one of its own.
+
+## Testing
+
+```bash
+cd bioview-common && pytest -q
+cd bioview-server && pytest -q
+cd bioview-client && pytest -q
+```
+
+The server suite includes end-to-end tests against the dummy RF backend, so it
+exercises the full acquisition path with no hardware attached. Tests needing
+real devices live in `bioview-server/tests/hardware` and only run with
+`--hardware`.
+
+## Packaging
+
+`bioview-installer` builds the frozen single-binary bundles. It freezes
+`scripts/pyinstaller_entry.py`, which hands off to `bioview_client.launch:main`;
+the same binary re-execs itself with `--role server` for the child server.
+
+See `bioview-installer/` and `release.sh`.

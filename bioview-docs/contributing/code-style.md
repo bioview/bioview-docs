@@ -1,58 +1,79 @@
-# 🧱 Code Style and Architecture
+# Code style and architecture
 
-The BioView codebase is structured with clarity and modularity in mind. We follow a broad **Model–View–Controller (MVC)** paradigm to ensure separation of concerns and hardware-independence.
+## Repository layout
 
-## Project Structure
+BioView is three installable packages plus an installer and these docs.
 
-```bash
-bioview/
-├── app.py              # Main entry point 
-├── device/             # Backend 
-    ├── common/             # Shared helpers and common tooling
-    ├── <device_name>/      # Device-specific implementation
-├── constants/          # Application-wide constants
-├── types/              # Data models and type definitions
-├── ui/                 # Frontend
-└── utils/              # General-purpose utilities
+```
+bioview-common/bioview_common/
+├── constants/         # ports, timeouts, queue depths
+├── datatypes/         # DataSource, configuration classes, worker base classes
+├── diagnostics/       # the known-issue catalogue
+├── protocol/          # Command / Response / status enums
+├── signal_schemes/    # CW, FMCW, pulsed Doppler, calibration, DPIC
+└── utils/             # network framing, bounded-queue policies, filtering
+
+bioview-server/bioview_server/
+├── server.py          # sessions, command dispatch, data fan-out
+├── datatypes/         # Backend base class (IPC contract)
+├── common/            # display and save workers shared by all backends
+└── device/            # usrp/, biopac/, dummy/ -- one package per backend
+
+bioview-client/bioview_client/
+├── launch.py          # roles, shared-server lifetime
+├── handler.py         # front-end agnostic protocol client
+├── workers.py         # off-thread scan / init / receive / save workers
+├── monitor.py         # acquisition window
+├── configurator.py    # device configuration window
+└── components/        # Qt widgets
 ```
 
-## Architectural Philosophy
+`bioview-common` never imports the other two. `bioview-client` never imports
+`bioview-server` at module load time.
 
-### Types and Data Models
+## Where things belong
 
-All generic data structures (e.g., `Device`, `Configuration`, etc.) should be defined in the `types/` directory. This allows clean reuse across the app.
+* **Generic datatypes** — `bioview-common/datatypes/`. Anything both the server
+  and a client need to agree on.
+* **Device-specific logic** — its own package under `bioview_server/device/`.
+* **No business logic in Qt widgets.** Widgets emit signals; the window and the
+  handler decide what to do.
+* **No device access in the client.** Everything goes through the protocol.
 
-### Domain-Specific Implementations
+## Comments and documentation
 
-Specific functionality (e.g., USRP-specific subclasses) should be implemented in their respective module folders (e.g., `usrp/`, `biopac/`). This keeps generic definitions clean and backend-specific logic isolated.
+Explanations belong in these docs, not in the source. In code, keep comments to
+short technical remarks — **at most two lines** — that say something the code
+cannot: why a lock is taken without blocking, why a copy is unconditional, why a
+value is bounded. Design rationale, file formats, protocol details and physical
+models go under `bioview-docs/` and are linked from a one-line docstring.
 
-### MVC Paradigm
+Docstrings: one line for anything whose name and signature already say what it
+does; a short paragraph only when there is a real contract to state.
 
-Broadly speaking, BioView aligns with the [MVC architecture](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller). The base implementation is structured as follows -
+## Style
 
-* **Model**: Device specific backends (such as for USRP, BIOPAC, etc) with a common API in  `device/`
-* **View**: GUI components in the `ui/` directory
-* **Controller**: `app.py` as a fairly non-opinionated controller
+* [PEP 8](https://peps.python.org/pep-0008/), enforced by `ruff` (line length
+  89, `E,W,F,I,UP,B,SIM,C90`).
+* Type annotations on public functions and classes.
+* Formatting is `ruff format` (Black-compatible: double quotes, spaces, magic
+  trailing commas respected).
 
-We implement this structure to encourage higher code quality and would urge you to stick with the same paradigm so that BioView remains - 
+`pre-commit` runs these before a commit. Please do not push past the hooks.
 
-* Easy to extend for new hardware backends
-* Maintainable and testable
-* Decoupled between frontend (UI) and backend (hardware/control logic)
+## Tests
 
-## Style Guidelines
+Each package has its own suite:
 
-* Follow [PEP8](https://peps.python.org/pep-0008/) conventions unless explicitly overridden.
-* Use type annotations and docstrings for all public functions and classes.
-* Avoid placing business logic inside UI components—keep the UI declarative and reactive.
-* Organize code into appropriate modules as outlined above, and prefer modular, composable functions and classes.
+```bash
+cd bioview-common && pytest -q
+cd bioview-server && pytest -q
+cd bioview-client && pytest -q          # Qt tests run offscreen
+pytest tests/hardware --hardware        # needs attached devices
+```
 
-### Pre-formatters
+The client suite sets `QT_QPA_PLATFORM=offscreen`, so it runs headless.
+Hardware tests are skipped unless `--hardware` is passed.
 
-As the codebase scales, enforcing good coding practices becomes a challenge. We simplify this by making use of [`precommit`](https://pre-commit.com) which uses the following hooks to validate code before it gets committed -
-
-* [`black`](https://black.readthedocs.io/en/stable/) is used for code formatting.
-* [`flake8`](https://flake8.pycqa.org/en/latest/) is used to enforce PEP8 compliance.
-* [`isort`](https://pycqa.github.io/isort/) helps clean up messy import statements into a cohesive structure.
-
-Please do not try to force through commits by skipping `pre-commit` checks as that will only make the codebase unmaintainable over time.
+Prefer tests that describe behaviour a user would notice — the existing names
+read that way on purpose (`test_a_plotted_source_that_disappears_is_unplotted`).

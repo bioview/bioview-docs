@@ -142,7 +142,7 @@ nav:
   - About:
     - index.md
     - Features: about/features.md
-    - Considerations: about/considerations.md
+    - Performance: about/considerations.md
     - Troubleshooting: about/troubleshooting.md
     - License: about/license.md
     - Versions:
@@ -150,21 +150,34 @@ nav:
       - How to upgrade: about/upgrading.md
   - Getting Started:
     - Installation: setup/installation.md
+    - Quick Start: usage/quickstart.md
+  - Usage:
+    - usage/index.md
+    - Running a Session: usage/session.md
+    - Configurator: usage/configurator.md
+  - Architecture:
+    - architecture/index.md
+    - Launching: architecture/launching.md
+    - Server: architecture/server.md
+    - Client: architecture/client.md
+    - Streaming Path: architecture/streaming.md
   - Reference:
     - reference/index.md
-    - Device API: reference/devices.md
-    - User Interface: reference/ui.md
-    - Supported Devices: 
+    - Configuration Files: reference/configuration.md
+    - Channel Maps and MIMO: reference/channel-map.md
+    - Signal Schemes: reference/signal-schemes.md
+    - DPIC: reference/dpic.md
+    - Wire Protocol: reference/protocol.md
+    - Recording Format: reference/bvr-format.md
+    - Monitor UI: reference/ui.md
+    - Supported Devices:
       - USRP: reference/usrp.md
       - BIOPAC: reference/biopac.md
-  - Examples:
-    - usage/index.md
-    - Basic Demo: usage/basic-demo.md
   - Contributing:
-    - Guidelines: 
+    - Guidelines:
       - Code Style: contributing/code-style.md
-      - Build Instructions: contributing/build-instructions.md 
-    - Reporting Issues: 
+      - Development Setup: contributing/build-instructions.md
+    - Reporting Issues:
       - Bugs: contributing/bug-report.md
       - Documentation Issue: contributing/docs-issue.md
       - Feature Change/Request: contributing/feature-request.md

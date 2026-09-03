@@ -1,7 +1,20 @@
-# Performance Considerations
+# Performance considerations
 
-* Real-time data acquisition requires sufficient system resources
-* Large data streams may require SSD storage for optimal performance
-* Memory usage scales with buffer sizes and visualization complexity. Visualization is kept efficient by only updating data streams for source that are actually visible
-* Spikes may occur in the data if receive buffer is kept low in size due to filtering edge effects
-* B210 devices work poorly with default frame sizes, which is why default receive frame size has been kept at 1024
+* Real-time acquisition needs real resources. A USRP at 1 MSps with several
+  channels will use a core or two for demodulation alone.
+* **Use an SSD for recordings.** The save queue is the deepest of the bounded
+  queues precisely because disk writes are bursty, but it is still finite.
+* Memory use scales with the bounded queue depths and the plot grid, both of
+  which are fixed and small. Nothing on the streaming path grows without limit.
+* Only plotted sources are drawn, and each chunk is decimated to at most one
+  screen's worth of points, so the display cost is bounded by the grid size and
+  the monitor refresh rate rather than by the acquisition rate.
+* **Keep the receive buffer reasonably large.** A small one produces spikes in
+  the data from filtering edge effects.
+* **B210s behave poorly with the default frame size.** BioView's default receive
+  frame size is 1024 for this reason.
+* Data goes over the wire as float32 — no plot resolves more, and it halves the
+  streamed volume. The server-side save path stays float64.
+* The first Start of a session is slow: each device's transmit, receive and
+  process workers are OS process spawns, and on Windows that is seconds per
+  worker. Later Start/Stop cycles just pause and resume them.
