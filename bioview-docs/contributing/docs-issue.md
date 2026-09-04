@@ -6,7 +6,7 @@ Maintaining comprehensive, accurate, and accessible documentation is critical to
 
 Please consider opening a documentation-related issue if you notice any of the following:
 
-### Missing Implementations in the [Docs Site](bioview.readthedocs.io)
+### Missing Implementations in the [Docs Site](https://bioview.readthedocs.io)
 
 Sections in the documentation website that are stubbed out, incomplete, or outdated relative to the codebase.
 

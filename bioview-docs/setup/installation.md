@@ -1,6 +1,6 @@
 # 📥 Installation
 
-This guide walks you through installing the necessary drivers and software dependencies to get started. BioView is cross-platform and designed to run on a wide range of platforms. BioView by itself does not restrict the choice of operating system. However, device manufacturers often do not have cross-platform driver availability so YMMV. The operating systems listed below have been tested to work properly; [contributions](./contributing/feature-request/) are welcome to setup install scripts for other operating systems.
+This guide walks you through installing the necessary drivers and software dependencies to get started. BioView is cross-platform and designed to run on a wide range of platforms. BioView by itself does not restrict the choice of operating system. However, device manufacturers often do not have cross-platform driver availability so YMMV. The operating systems listed below have been tested to work properly; [contributions](../contributing/feature-request.md) are welcome to setup install scripts for other operating systems.
 
 ## Supported Operating Systems
 

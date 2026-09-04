@@ -23,6 +23,9 @@ site_description: >-
 repo_name: bioview-docs
 repo_url: https://github.com/bioview/bioview-docs
 
+# Source of documentation pages
+docs_dir: bioview-docs
+
 # Copyright
 copyright: Copyright &copy; 2025 Aakash Kapoor
 
@@ -119,9 +122,7 @@ markdown_extensions:
       repo: mkdocs-material
   - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.snippets:
-      auto_append:
-        - includes/mkdocs.md
+  - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
