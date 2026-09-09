@@ -15,6 +15,7 @@
 
 * [USRP](usrp.md)
 * [BIOPAC](biopac.md)
+* [Microphone](microphone.md)
 
 ## Adding a device backend
 
@@ -30,13 +31,18 @@ methods:
 | `_disconnect()` | Release the device. |
 | `_queue_param_update(params)` | Apply a live parameter change. |
 
-Two optional hooks:
+Optional hooks, each with a working default:
 
 * `_post_start_streaming()` — work that must happen once streaming is live but
   must not delay the reply (an auto DPIC balance, for instance).
 * `_apply_param_update_local(params)` — mirror parameters that change
   `data_sources` on the parent side, since `get_data_sources()` is answered out
   of the parent process while `_queue_param_update` runs in the child.
+* `_run_dpic_balance()` — returns `{"ok", "message", "results"}`. The default
+  refuses with a message naming the group, so a backend with no cancellation
+  path reports that rather than answering `SUCCESS` having done nothing. The
+  base class runs it on its own thread, so the child's command loop keeps
+  answering Stop and Shutdown while it is going.
 
 Register it in `bioview_server.device.get_device_handler` and add its
 configuration class to `bioview_common.datatypes.configuration`. Everything

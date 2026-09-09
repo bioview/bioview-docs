@@ -1,0 +1,52 @@
+/* Brand colours taken from the application mark (assets/favicon.svg): the
+   slate ground it sits on and the two ends of its pulse gradient. Keeping the
+   site on the same three values as the client and the installers means the
+   header, the logo and the app in the screenshots do not read as three
+   different products. */
+:root {
+  --bioview-ground: #0f172a;
+  --bioview-pulse-start: #4facfe;
+  --bioview-pulse-end: #00f2fe;
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--bioview-ground);
+  --md-primary-fg-color--light: #1e293b;
+  --md-primary-fg-color--dark: #0b1120;
+  --md-accent-fg-color: #0284a8;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: var(--bioview-ground);
+  --md-primary-fg-color--light: #1e293b;
+  --md-primary-fg-color--dark: #0b1120;
+  --md-accent-fg-color: var(--bioview-pulse-end);
+  --md-typeset-a-color: var(--bioview-pulse-start);
+}
+
+/* The announcement bar is the only place the release version appears on every
+   page, so it gets the pulse gradient rather than the header's flat ground. */
+.md-banner {
+  background: linear-gradient(
+    90deg,
+    var(--bioview-pulse-start),
+    var(--bioview-pulse-end)
+  );
+  color: var(--bioview-ground);
+}
+
+.md-banner a,
+.md-banner a:hover,
+.md-banner__button {
+  color: inherit;
+}
+
+.md-banner strong {
+  font-weight: 700;
+}
+
+/* Download tables list one artifact per row; the file names are long and must
+   not wrap mid-name. */
+.md-typeset table:not([class]) td code {
+  white-space: nowrap;
+}

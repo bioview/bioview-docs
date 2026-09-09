@@ -9,6 +9,7 @@ with two timed routines.
 {
   "Experiment": {
     "type": "EXPERIMENT",
+    "panel_width": 0.25,
     "enable_save": true,
     "save_dir": "./recordings",
     "file_name": "usrp_biopac_session.bvr",
@@ -29,9 +30,12 @@ with two timed routines.
   },
   "USRP": {
     "type": "USRP",
+    "panel_width": 0.5,
     "signal_scheme": "cw",
     "samp_rate": 1000000,
     "carrier_freq": 1000000000,
+    "save_ds": 100,
+    "disp_ds": 1,
     "hardware": {
       "MyB210_3": {
         "tx_channels": [0, 1],
@@ -48,6 +52,7 @@ with two timed routines.
   },
   "BIOPAC": {
     "type": "BIOPAC",
+    "panel_width": 0.25,
     "model": "MP36",
     "samp_rate": 1000,
     "channels": [1, 1, 0, 0],
@@ -55,6 +60,16 @@ with two timed routines.
   }
 }
 ```
+
+The USRP claims half the settings strip and the other two a quarter each
+(`panel_width`), because a two-channel RF panel is a far wider grid than the
+five rows of the experiment block.
+
+`save_ds: 100` with `disp_ds: 1` records the RF rows at 10 kHz. Both divisors
+apply to the file, not just the plot, so leaving `disp_ds` at its default of 10
+would have written 1 kHz instead — see [the streaming
+path](../architecture/streaming.md). BIOPAC needs no such care here: it is
+already at 1 kHz and every acquired sample reaches the display.
 
 This produces six sources:
 
@@ -69,11 +84,15 @@ This produces six sources:
 bioview --config-file usrp_biopac_session.json
 ```
 
-1. **Initialize.** Both groups come up. If one fails, the log names it and the
-   other still initializes — but streaming will refuse to start with a partial
-   rig, since data that cannot be aligned across devices is not worth
-   recording.
-2. Tick the sources you want plotted and set the grid to 3×2.
+1. **Initialize.** Both groups come up. This is the slow step — opening the
+   B210 means USB enumeration, FPGA and CODEC bring-up and clock locking, and
+   `uhd.find` alone takes seconds. If one group fails, the log names it and a
+   modal says which and why; the other still initializes, but streaming will
+   refuse to start with a partial rig, since data that cannot be aligned across
+   devices is not worth recording.
+2. `Tx1Rx1` and `BIOPAC Ch1` are plotted for you the moment they are
+   advertised, because `display_sources` asked for them. Tick any others you
+   want and set the grid to 3×2.
 3. Pick **Baseline** from the routine dropdown and press **Start**. The status
    bar shows the countdown; the stream stops itself at 3 minutes and the
    recording is written to `usrp_biopac_session_Baseline.bvr`.

@@ -8,53 +8,157 @@ an anti-phase copy from a second transmitter.
 
 One Tx carries the measurement signal. Its direct path leaks into the Rx as a
 complex term `d`. A second ("inject") Tx radiates a copy of the **same** IF tone
-through a coupling `h`, scaled by a digital weight `w = a·exp(jφ)` and by the
-inject Tx's analog gain `g`. The residual at the receiver is
+through a coupling `h`, scaled by a digital weight `w = a*exp(j*phi)`. The
+residual at the receiver is
 
 ```
-r(w) = d + h(g)·w
+r(w) = d + h*w
 ```
 
-which is **affine in w**. Everything below follows from that one fact.
+`|r|` is sinusoidal in `phi` with a single minimum at `angle(-d/h)`, largely
+independent of `a`, and V-shaped in `a` once `phi` is fixed. Both axes are
+unimodal, which is what makes a coarse-to-fine bracket safe.
 
-* `|r|` is sinusoidal in `φ` with a single minimum at `angle(-d/h)`, independent
-  of `a`; and V-shaped in `a` once `φ` is fixed. Both axes are unimodal, so a
-  coarse-to-fine bracket is safe.
-* Better: being affine, `h` and `d` are **identifiable from two probes**, after
-  which the cancelling weight follows in closed form.
+## The search
 
-## Two-probe identification
+A direct port of the `Pig_2Ch_NCS_BIOPAC_BalanceSignal` LabVIEW VI. Four
+sweeps, in the VI's order:
 
-```
-r0 = r(0)   = d
-r1 = r(a0)  = d + h·a0     =>   h  = (r1 - r0) / a0
-                                w* = -d / h = -r0·a0 / (r1 - r0)
-```
+| # | Sweep | Range | Step | Points |
+|---|-------|-------|------|--------|
+| 1 | Coarse phase, at `coarse_probe_amplitude` (0.1) | 0..360 deg | 6 deg | 60 |
+| 2 | Coarse amplitude, at the phase from 1 | 0..1 | 0.05 | 20 |
+| 3 | Fine phase, around the phase from 1 | +/- 6 deg | 0.2 deg | 60 |
+| 4 | Fine amplitude, around the amplitude from 2 | +/- 0.05 | 0.001 | 100 |
 
-Two measurements and a division replace thousands of grid points.
+Each fine sweep spans exactly +/- one coarse step, so the coarse winner's
+bracket is covered whichever side the true minimum falls on. Every sweep takes
+the argmin of everything it measured -- it is not required to beat the seed.
 
-Because the model is affine, a residual measured at any `w` also gives an exact
-Newton correction `w <- w - r/h`. One step is exact for the model; it is
-repeated a few times only to absorb what the real hardware does that the model
-does not — DAC nonlinearity, slow drift in `d`.
+Per-point dwell is the VI's too: **200 ms** on the coarse sweeps, **100 ms** on
+the fine ones, and **500 ms** after each sweep's winner is applied. These sit
+*on top of* the wait for fresh Rx chunks, not instead of it. Without them the
+whole search runs in a couple of seconds, each point on screen for a frame or
+two, and the characteristic rise-and-fall of the phase sweep never appears on
+the plot.
 
-## Analog gain stepping
+241 measurements per pair, ~53 s of them dwell and chunk waits. `time_budget_s`
+caps the wall clock and is split across pairs; the shipped configuration default
+is 120 s (the balancer class itself defaults to 300 s if no configuration says
+otherwise). A sweep that runs out of budget stops where it is and keeps the best
+point found so far, and says so — the result is then marked `truncated` and
+logged as a warning rather than passed off as a completed search.
 
-The digital weight only spans `|w| <= 1`. When the required `|w*|` falls outside
-a comfortable band the **analog** gain of the inject Tx is stepped so that
-`|w*|` lands near mid-scale, and identification is repeated. That is what makes
-the full range of direct-path strengths reachable, instead of clipping at
-`|w| = 1` for a strong path or squeezing the injection into a handful of DAC
-codes for a weak one.
+The VI's Rx-gain step ("tune Rx gain to a DC value of ~0.5") runs on either
+side of the search, through the channel's `auto_gain_rx` callback: before,
+because a null search is meaningless if the direct path sits in the noise
+floor; and again after, because the null leaves the Rx far below its operating
+point. `min_metric` is recorded before the second call, so the reported null
+depth compares two measurements at one gain setting.
 
-## Grid fallback
+Two deliberate departures from the VI:
 
-When the measurement path cannot supply a complex phasor — only a magnitude —
-or when the closed-form solve does not actually beat the starting point, a
-coarse-to-fine grid search over `(φ, a)` runs instead. If no usable metric is
-read at all, the pair's settings are restored to their pre-search values; the
-hardware is never left at an arbitrary point, and in particular never at
-amplitude 0 just because the measurement path was silent.
+* The VI waits a fixed 100-200 ms per point for the Rx to catch up. Here every
+  measurement instead blocks for chunks captured *after* the change (see
+  "Stale reads" below), which is both faster and exact.
+* The VI adjusts the measure Tx's analog gain in lockstep with the Rx gain.
+  `_auto_gain_rx` moves the Rx gain only, by a proportional
+  `20*log10(target/level)` correction rather than the VI's +/-1 dB ladder.
+
+## Gain stage
+
+Before the search and again once the path is nulled, the balancer walks the
+level into range the way the VI does: **the measure Tx's analog gain and the
+measure Rx's gain move together, 1 dB at a time**, with a 250 ms settle, until
+the measured amplitude sits inside `amp_target ± amp_tolerance`. Raising Rx
+gain alone would lift the noise floor with the signal; raising the measurement
+Tx as well lifts the direct path that is about to be cancelled.
+
+The VI's loop is unbounded. `max_gain_steps` bounds it here, and the ladder
+also stops when both gains are already against the end of their range, so a
+level that can never be reached (a dead path, a disconnected antenna) fails
+instead of spinning.
+
+A backend with no analog gain control -- the simulator -- leaves the gain
+accessors unset and the stage is skipped.
+
+## Watching it run
+
+Every measurement reports the stage, the point index, the value applied, the
+metric and both gains. The server attaches the newest report to
+`GET_DEVICE_STATUS`, which the client is already polling, and the settings
+panel writes the values into the matching spin boxes: IF phase and amplitude
+for the inject Tx, Tx gain for the measure Tx, Rx gain for the measure Rx. The
+Balance button carries the stage, e.g. *coarse phase 12/60*.
+
+The panel does not echo these back to the server -- they are values the server
+just set, and sending them back would have the UI fighting the search.
+
+## Running it
+
+A balance is asynchronous at every layer, because it drives hardware for a
+minute or more and nothing else may wait on it. The backend child runs the
+search on its own thread so its command loop keeps answering Stop and Shutdown;
+the server acknowledges the command and publishes the outcome for polling; the
+client dispatches it to a worker thread and polls once a second, leaving the
+GUI thread and the control socket free. Only one balance runs at a time -- a
+second is refused, not queued.
+
+Stopping the stream (or disconnecting, or shutting down) **aborts** a running
+balance. `DpicBalancer.should_abort` is consulted at every sweep point, so the
+search unwinds immediately instead of measuring a radio that is no longer
+transmitting, once per point, until its time budget expires.
+
+Editing the channel map applies live, including the DPIC loop list: the
+backend rebuilds its sources and pairs from the new map, so a loop added in the
+settings panel is balanceable without re-initializing the device. The map is
+frozen while streaming, since it decides how many rows the pipeline emits.
+
+## Inject frequency
+
+Balance retunes each pair's inject Tx onto its measure Tx's IF before the
+search. The receive chain band-passes around the measure Tx's IF, so an
+injection at any other frequency is rejected by that filter and cannot cancel
+the direct path whatever weight the search picks. With `if_freq` of
+`[100e3, 110e3]` and a pair injecting from Tx2 to measure Tx1, both run at
+100 kHz for the balance and afterwards.
+
+The change reaches the transmit workers, the processing worker's band-pass, and
+the stored configuration together, so the settings panel shows the IF the radio
+is actually driven at.
+
+## Reporting
+
+Every outcome carries a reason, including "it did not run". `_run_dpic_balance`
+returns `{"ok", "message", "results"}`; the IPC layer replies `ERROR` when `ok`
+is false and the server forwards the backend's own message. Returning `None` on
+the early-outs -- no pairs configured, processing worker not started -- used to
+be answered as `SUCCESS`, so the Monitor reported "DPIC balance complete" in a
+couple of milliseconds while nothing had been driven.
+
+Each sweep records a `DpicStage`: points planned, visited, and measured, plus
+its winner and elapsed time. These are logged at debug level per pair, so a
+short balance names the sweep that was cut short instead of just finishing
+early. `truncated` is set when the time budget stopped a sweep mid-way; the
+result is then the best point seen, not a completed search, and it is logged as
+a warning.
+
+The Rx-gain step runs *before* the deadline is set. It is a prerequisite of the
+search rather than part of it, and on a slow measurement path it could
+otherwise consume the whole budget and leave every sweep to break on its first
+point.
+
+## Retired channels
+
+Adding a DPIC pair retires **both halves** of the inject channel: the Tx is
+radiating the cancellation tone rather than a measurement signal, and the Rx
+sharing that physical port has nothing to receive, so every `TxNRxM` row
+against it is noise by construction. `resolve_channel_map` drops both, matching
+the Rx on `(device, channel)` from the registry rather than on index, and the
+Configurator's channel-map matrix resizes as pairs are added and removed.
+
+`custom` layouts are left alone -- the pairs are written out one by one, so the
+author has said exactly what they want.
 
 ## Same IF, always
 
@@ -88,14 +192,12 @@ null.
   "auto_on_start": false,
   "amp_target": 0.5,
   "settle_time_s": 0.02,
-  "gain_settle_time_s": 0.05,
-  "time_budget_s": 25.0,
-  "probe_amplitude": 0.5,
-  "target_weight": 0.5,
-  "min_weight": 0.15,
-  "refine_iterations": 3,
-  "phase_step_deg": 0.1,
-  "amp_step": 0.05
+  "time_budget_s": 120.0,
+  "coarse_phase_step_deg": 6.0,
+  "coarse_amp_step": 0.05,
+  "coarse_probe_amplitude": 0.1,
+  "phase_step_deg": 0.2,
+  "amp_step": 0.001
 }
 ```
 

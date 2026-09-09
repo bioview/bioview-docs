@@ -3,11 +3,15 @@
 ## Prerequisites
 
 * **Git**, on `PATH`. On Windows use Git Bash or PowerShell.
-* **Python 3.12** (the packages require `>=3.12, <3.14`).
+* **Python 3.12 or 3.13** (the packages require `>=3.12, <3.14`).
 * **UHD with Python bindings**, if you are working on the USRP backend. It is
   usually supplied by the Ettus installer rather than pip.
 * **BHAPI (`mpdev.dll`)**, Windows only, if you are working on the BIOPAC
   backend.
+
+None of the three is required. The `DUMMY` backend exercises streaming, saving,
+calibration and DPIC with nothing attached, and the microphone backend needs
+only whatever input the host already has.
 
 ## Setting up
 
@@ -73,7 +77,8 @@ cd bioview-client && pytest -q
 The server suite includes end-to-end tests against the dummy RF backend, so it
 exercises the full acquisition path with no hardware attached. Tests needing
 real devices live in `bioview-server/tests/hardware` and only run with
-`--hardware`.
+`--hardware`. The client suite sets `QT_QPA_PLATFORM=offscreen` and runs
+headless.
 
 ## Packaging
 
@@ -81,4 +86,16 @@ real devices live in `bioview-server/tests/hardware` and only run with
 `scripts/pyinstaller_entry.py`, which hands off to `bioview_client.launch:main`;
 the same binary re-execs itself with `--role server` for the child server.
 
-See `bioview-installer/` and `release.sh`.
+All three builders are driven from one `build.toml`, which pins the version, the
+UHD release and the git refs of the three packages; they prefer a local sibling
+checkout of each package and fall back to a shallow clone of the pinned ref on a
+clean CI runner.
+
+`release.sh` at the monorepo root bumps every version stamp across the four
+repositories — including this documentation site — commits them, then tags and
+pushes. The package tags must exist on GitHub before the installer tag is
+pushed, because the builders clone the three packages at the refs in
+`build.toml`; pushing the installer tag is what starts the CI matrix.
+
+See `bioview-installer/README.md` for the per-platform UHD delivery and the
+known limitations.

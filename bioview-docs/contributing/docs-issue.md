@@ -1,54 +1,43 @@
-# 📄 Documentation Issue
+# Documentation issues
 
-Maintaining comprehensive, accurate, and accessible documentation is critical to the usability and sustainability of **BioView**. If you've encountered documentation gaps or inconsistencies, we welcome your help in identifying and reporting them.
+This site is built with MkDocs Material from
+[`bioview-docs`](https://github.com/bioview/bioview-docs). Pages live under
+`bioview-docs/` in that repository and the navigation tree is in `mkdocs.yml`.
 
-## When to Open a Documentation Issue
+```bash
+poetry install
+poetry run mkdocs serve
+```
 
-Please consider opening a documentation-related issue if you notice any of the following:
+## What is worth reporting
 
-### Missing Implementations in the [Docs Site](https://bioview.readthedocs.io)
+* **A page that describes something the code no longer does.** This is the
+  common case and the most valuable one: the docs carry design rationale that
+  cannot be recovered from the source, so a page that has drifted is worse than
+  no page at all.
+* **A behaviour that surprised you and is not written down.** Several deliberate
+  behaviours look like faults until you know why — the refusal to stream a
+  partially started rig, a renamed USRP still announcing its old name,
+  `disp_ds` decimating the recording as well as the plot. If one of those cost
+  you time, the page that should have said so is a documentation bug.
+* **A number that does not match the code.** Queue depths, timeouts, default
+  decimations and dwell times are all quoted here and all read from constants
+  somewhere.
+* **Broken links, dead anchors, rendering problems.**
 
-Sections in the documentation website that are stubbed out, incomplete, or outdated relative to the codebase.
+## Where explanations belong
 
-### Low or Absent Code Comments
+BioView keeps design rationale in these docs rather than in source comments: in
+code, comments are short technical remarks saying what the code cannot, and file
+formats, protocol details and physical models are documented here and linked
+from a one-line docstring. So "this function needs a longer comment" is usually
+really "this page needs a paragraph". See [Code style](code-style.md).
 
-Important code files, especially public APIs, utilities, or hardware backends, lack descriptive docstrings or inline comments.
+## Opening one
 
-### Outdated Examples or Tutorials
+Use the [issue tracker](https://github.com/bioview/bioview-docs/issues) and
+include the page URL, what it says, and what it should say. If you know the
+code, quoting the file and line that contradicts the page turns the report into
+a fix.
 
-Any tutorial, usage guide, or example that no longer aligns with the current version of the project or dependencies.
-
-### Lack of Localization or Translation
-
-Pages on the documentation site are untranslated, or users are unable to switch to their preferred language.
-
-### Broken Links or Navigation
-
-Links that lead to non-existent anchors, redirect incorrectly, or return 404 errors.
-
-### Formatting or Accessibility Issues
-
-Markdown or HTML rendering issues that affect readability, as well as accessibility concerns (e.g., poor color contrast, lack of alt text).
-
-## How to Submit a Docs Issue
-
-1. Go to the [GitHub Issues page](https://github.com/meowkash/bioview/issues)
-2. Select **"New Issue"** and use the **Documentation Report** template
-3. Include as much detail as possible:
-
-   * A clear title summarizing the problem
-   * A description of the affected section or file
-   * Suggestions for what could be improved or added
-   * Screenshots, if visual elements are involved
-
-## (Optional) Contribute a Fix
-
-If you're comfortable making edits, feel free to open a pull request with the updated documentation. We welcome contributions to:
-
-* Markdown files in the `/docs` directory
-* Docstrings and comments in source files
-* Translation files if i18n support is configured
-
-For style guidance, refer to the current documentation.
-
-> ⚠️ When in doubt, open an issue! Even small improvements to documentation are valuable.
+Pull requests are welcome, and small corrections need no prior discussion.

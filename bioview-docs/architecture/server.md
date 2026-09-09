@@ -46,11 +46,20 @@ Each device group in the configuration gets one `Backend` subprocess:
 | --- | --- |
 | `USRP` | `bioview_server.device.usrp.USRPBackend` |
 | `BIOPAC` | `bioview_server.device.biopac.BIOPACBackend` |
+| `MICROPHONE` | `bioview_server.device.microphone.MicrophoneBackend` |
 | `DUMMY` | `bioview_server.device.dummy.DummyBackend` |
 
-A backend that cannot be imported (missing driver, missing Python dependency) is
-recorded in `UNAVAILABLE_BACKENDS` with the reason and reported to the
-Configurator alongside the device list, rather than silently not appearing.
+Registration probes each backend rather than merely importing its package. The
+USRP package resolves its heavy attributes lazily, so `from . import usrp` loads
+no UHD at all; the registry imports through to `usrp.utils` — which is what
+actually loads the bindings — so a broken install fails at registration with a
+reason instead of at first use inside a device subprocess. The BIOPAC probe
+checks the platform and that `mpdev.dll` loads; the microphone probe reaches
+through to `sounddevice`.
+
+A backend that fails any of that is recorded in `UNAVAILABLE_BACKENDS` with the
+reason and reported to the Configurator alongside the device list, rather than
+silently not appearing.
 
 ### Backend IPC
 
@@ -75,7 +84,8 @@ Timeouts are per operation, because the operations are not comparable:
 | Operation | Timeout |
 | --- | --- |
 | `CONNECT_DEVICES` | 150 s (a `uhd.find` plus device init) |
-| `START_STREAMING` / `STOP_STREAMING` | 90 s (worker processes are spawned) |
+| `START_STREAMING` | 5 s (threads already exist; this is only a resume) |
+| `STOP_STREAMING` | 15 s (a final end-of-burst buffer, and the recorder flushes) |
 | `DISCONNECT_DEVICES` | 15 s |
 | everything else | 10 s |
 
@@ -91,7 +101,7 @@ started session records data that cannot be aligned across devices. The error
 names each device that failed and why:
 
 ```
-Failed to start streaming -- USRP: USRP did not answer START_STREAMING within 90s
+Failed to start streaming -- USRP: USRP did not answer START_STREAMING within 5s
 ```
 
 `STOP_STREAMING` is the mirror image: every device is asked to stop even if one

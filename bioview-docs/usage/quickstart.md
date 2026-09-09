@@ -1,6 +1,12 @@
 # Quick start
 
+Assumes BioView is installed — from an [installer](../setup/downloads.md) or
+[from source](../setup/installation.md).
+
 ## 1. Open the Monitor
+
+Start Menu › **BioView Monitor**, the app in `/Applications`, `flatpak run
+org.bioview.BioView`, or from a source install:
 
 ```bash
 bioview
@@ -10,7 +16,10 @@ That is the whole command. The launcher starts a hidden localhost server for you
 and opens the Monitor against it. If a BioView server is already running on this
 machine — because a Configurator is open, say — it is reused.
 
-You should see the status bar report a connected server within a second or two.
+You should see the status bar report **BioView Server Connected** within a
+second or two. That line is the whole story most of the time; **More…** beside
+it opens a panel for scanning the network, picking a different server, and
+connecting or disconnecting by hand.
 
 ## 2. Load a configuration
 
@@ -18,8 +27,12 @@ If no configuration file was given, the Monitor prompts for one at startup. Or
 pass it directly:
 
 ```bash
-bioview --config-file my_experiment.json
+bioview --config-file my_experiment.bvi
 ```
+
+Configurations are JSON; `.bvi` is the conventional extension, and on Windows
+the installer associates it with the Monitor, so double-clicking one opens it
+directly.
 
 A minimal file with a single USRP:
 
@@ -36,6 +49,8 @@ A minimal file with a single USRP:
     "signal_scheme": "cw",
     "samp_rate": 1000000,
     "carrier_freq": 1000000000,
+    "save_ds": 100,
+    "disp_ds": 1,
     "hardware": {
       "MyB210": {
         "tx_channels": [0],
@@ -53,8 +68,13 @@ A minimal file with a single USRP:
 `MyB210` must be a device name the server can resolve. Use the
 [Configurator](configurator.md) to see what is attached and to assign names.
 
+`save_ds` and `disp_ds` together set the recorded rate — 1 MHz / (100 × 1) =
+10 kHz here. Both divide it, because the recording is written from the display
+stream; leaving `disp_ds` at its default of 10 would have recorded 1 kHz. See
+[the streaming path](../architecture/streaming.md).
+
 No hardware to hand? Swap the device block for a `DUMMY` one and everything
-below still works.
+below still works, calibration and DPIC included.
 
 ## 3. Initialize
 
@@ -66,8 +86,10 @@ carry a suggested remedy.
 
 ## 4. Choose what to plot
 
-Open the **Experiment** settings tab and tick sources in **Plot Sources**. Each
-is named `Device: Source`, e.g. `USRP: Tx1Rx1`. Set the grid with **Plot
+Open the **Experiment** settings panel and tick sources in **Plot Sources**.
+Each is named `Device: Source`, e.g. `USRP: Tx1Rx1`. Listing them under
+`display_sources` in the experiment block plots them automatically as soon as
+they are discovered. Set the grid with **Plot
 Layout** and the visible window with **Display Time**.
 
 ## 5. Record
@@ -81,6 +103,8 @@ parameter changes you made along the way, is in that one `.bvr` file.
 
 ## 6. Read the data back
 
+The file is self-describing: the header names every column and the rate it was
+recorded at, so nothing needs to be remembered alongside it.
 `bioview-client/tests/bvr_reader.py` is a minimal reference reader. See
 [the `.bvr` format](../reference/bvr-format.md).
 

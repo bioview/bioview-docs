@@ -8,7 +8,7 @@ cooperating OS processes.
 | Package | Contents |
 | --- | --- |
 | `bioview-common` | Wire protocol, configuration datatypes, signal schemes, bounded-queue helpers, the known-issue catalogue. Imported by both of the others. |
-| `bioview-server` | The headless server, the per-device backends (USRP, BIOPAC, dummy) and the acquisition pipeline. |
+| `bioview-server` | The headless server, the per-device backends (USRP, BIOPAC, microphone, dummy) and the acquisition pipeline. |
 | `bioview-client` | The Monitor and Configurator GUIs, the client-side protocol handler, and the launcher that starts everything. |
 
 `bioview-common` never imports the other two. The client never imports the
@@ -27,14 +27,14 @@ with no device drivers present.
                    |
         multiprocessing.Queue per device
                    |
-   +---------------+---------------+
-   |               |               |
- USRP backend   BIOPAC backend   Dummy backend      (one process each)
+   +--------+--------+--------+
+   |        |        |        |
+ USRP    BIOPAC    Mic     Dummy    backends        (one process each)
    |
- Tx / Rx / process workers                          (threads or processes)
+ Tx / Rx / process workers                          (threads, inside it)
 ```
 
-Every box above is a separate OS process. That is deliberate:
+Each backend is a separate OS process. That is deliberate:
 
 * **UHD and PyQt never share an interpreter.** UHD's Python bindings hold the
   GIL for long stretches during `recv`; running them in the GUI process makes
@@ -42,6 +42,11 @@ Every box above is a separate OS process. That is deliberate:
 * **A device driver that crashes takes down one backend, not the session.**
 * **The server outlives any one window,** so a Monitor and a Configurator can
   drive the same hardware at the same time.
+
+Inside a backend the acquisition workers are threads, not further processes.
+They are constructed when the device is initialized and started paused, so
+Start and Stop pause and resume them rather than building anything — which is
+why Initialize is the slow operation and Start is not.
 
 ## Who owns what
 
@@ -51,7 +56,9 @@ Every box above is a separate OS process. That is deliberate:
 * **Recordings are written by the client.** The server streams everything it
   acquires; the client tees each chunk to disk and to the plots. Saving on the
   client keeps the write off the acquisition path and puts the file on the
-  machine the operator is sitting at.
+  machine the operator is sitting at. One consequence is easy to miss: because
+  the client saves from the *display* stream, `disp_ds` decimates the recording
+  as well as the plot. See [the streaming path](streaming.md).
 * **The client decides what to plot.** The server forwards every source, and
   the Monitor routes rows to plots using the per-chunk source list.
 

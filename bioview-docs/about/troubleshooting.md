@@ -44,14 +44,18 @@ power cycled.
 The error names each device that failed and why:
 
 ```
-Failed to start streaming -- USRP: USRP did not answer START_STREAMING within 90s
+Failed to start streaming -- USRP: USRP did not answer START_STREAMING within 5s
 ```
 
 If any device fails, the ones that already started are stopped again: a
 partially started session records data that cannot be aligned across devices.
 
-A start genuinely can take tens of seconds the first time, because each device's
-transmit, receive and process workers are OS process spawns on Windows.
+Start is not the slow operation — the workers are threads created when the
+device was initialized, and resuming them is measured in tenths of a second. The
+five-second budget is deliberately tight for that reason: a device that has not
+answered is wedged, and waiting longer only delays the error while holding up
+every device queued behind it. If something is slow, it is almost always
+Initialize (150 s budget), where the radio is actually being opened.
 
 ## The plot scrolls too slowly
 
@@ -73,6 +77,32 @@ and only then drops. Drops are counted, not logged per event.
 Sustained drops on the save path mean the disk is not keeping up; use an SSD.
 Sustained drops on the Rx path mean demodulation is not keeping up, which will
 also show as UHD overflows.
+
+## The recording is at the wrong rate
+
+The recorded rate is `samp_rate / (save_ds * disp_ds)`, not `samp_rate /
+save_ds`: the client writes the file from the display stream, so both divisors
+apply. A recording that came out ten times thinner than expected is almost
+always `disp_ds` sitting at its default of 10. Set it explicitly in any
+configuration meant to record.
+
+The file itself is not ambiguous about this — the `disp_freq` in the `.bvr`
+header is the rate that actually reached disk.
+
+## The microphone recorded the wrong thing
+
+Windows enumerates loopback inputs ("Stereo Mix", "What U Hear") alongside real
+microphones. During a routine a loopback records the instruction audio being
+played back rather than the participant, and nothing in the file says so. With
+no host default input, BioView skips loopbacks by name and warns which input it
+took instead; a configuration that names one explicitly is honoured, because the
+backend cannot know that was not deliberate. Name the input you want in
+`device`. See [Microphone](../reference/microphone.md).
+
+A requested sample rate is also only a request: MME commonly offers a device
+only at its native rate. The negotiated rate is what the sources advertise and
+what the `.bvr` header records, so check the header rather than assuming the
+configured value.
 
 ## Spikes in the data
 

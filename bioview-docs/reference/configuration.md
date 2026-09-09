@@ -1,8 +1,14 @@
 # Configuration files
 
-A BioView configuration is a single JSON object. Each top-level key is either
-the experiment block or one **device group**; the key is the group's id and
-appears in every source name, log line and status row.
+A BioView configuration is a single JSON object. The conventional extension is
+**`.bvi`** — the payload is plain JSON, and `.json` is accepted everywhere too.
+The Windows installer registers `.bvi` with the Monitor, so double-clicking one
+opens it with that configuration loaded; the Flatpak declares the same
+association through the `application/x-bvi` MIME type.
+
+Each top-level key is either the experiment block or one **device group**; the
+key is the group's id and appears in every source name, log line and status
+row.
 
 ```json
 {
@@ -12,9 +18,34 @@ appears in every source name, log line and status row.
 }
 ```
 
-`type` selects the configuration class: `EXPERIMENT`, `USRP`, `BIOPAC` or
-`DUMMY`. A file with no `EXPERIMENT` block still gets a default one, so the
-plot-source selector and the save controls always exist.
+`type` selects the configuration class: `EXPERIMENT`, `USRP`, `BIOPAC`,
+`MICROPHONE` or `DUMMY`. A file with no `EXPERIMENT` block still gets a default
+one, so the plot-source selector and the save controls always exist.
+
+Nothing stops two blocks of the same type: `RF_DPIC_900M` and `RF_MIMO_1G8` can
+both be `USRP` groups on different carriers, each with its own channel map. The
+key is the group id, and it prefixes every source name that group produces.
+
+## Panel width
+
+Any block may carry `panel_width`: the share of the monitor's settings strip
+that block's panel is given. The panels are not equally hungry — an experiment
+block is five short rows, a two-channel USRP is a wide parameter grid — so
+equal columns waste space on one and crowd the other.
+
+```json
+"Experiment": { "type": "EXPERIMENT", "panel_width": 0.25, "...": "..." },
+"USRP":       { "type": "USRP",       "panel_width": 0.5,  "...": "..." },
+"BIOPAC":     { "type": "BIOPAC",     "panel_width": 0.25, "...": "..." }
+```
+
+Shares are relative, so they need not sum to 1: `1` / `3` / `1` reads the same
+as `0.2` / `0.6` / `0.2`. A block that names no share takes the average of
+those that do. When *no* block names one, the strip falls back to equal columns
+sized from the window width (1 / 2 / 3 / 4 across its breakpoints), scrolling
+sideways for the rest. Once any share is named every panel is on screen at
+once, down to a readable floor below which the strip scrolls instead.
+Non-numeric and non-positive values are ignored.
 
 ## Experiment block
 
@@ -23,11 +54,24 @@ plot-source selector and the save controls always exist.
 | `enable_save` | `false` | Record to disk while streaming. |
 | `save_dir` | `null` | Folder for recordings. |
 | `file_name` | `""` | Base name; a numeric suffix is added if it already exists. |
-| `display_sources` | `[]` | Sources ticked in the plot selector at startup. |
+| `display_sources` | `[]` | Sources plotted as soon as they are discovered. |
 | `timed_modes` | `[]` | Routines, see below. |
+| `audio_output_device` | `null` | Output that routine instructions play through. |
 
 Saving requires both `file_name` and `save_dir`. Enabling it without them is
 refused and the checkbox reverts.
+
+`display_sources` names sources either fully (`"BIOPAC: Ch1"`) or by their bare
+channel label (`"Ch1"`), case- and spacing-insensitively; a configuration is
+usually written before the group ids are settled. The list of available sources
+only exists once the devices are initialized, so each entry is ticked the first
+time a matching source is advertised — and only that once, so untying a default
+plot keeps it untied.
+
+The plot grid is sized at startup to hold every entry in the list, up to the
+4x3 the layout spin boxes allow. Below five entries it stays at the familiar
+2x2. A list longer than twelve is reported in the log and the surplus is not
+plotted.
 
 ### Timed modes (routines)
 
@@ -64,6 +108,31 @@ alongside them.
 
 Audio needs no window; text and video open a popup.
 
+### Choosing the speaker
+
+`audio_output_device` names the host output instructions play through. A single
+instruction can override it with its own `output_device`.
+
+```json
+"audio_output_device": "Realtek"
+```
+
+Matching is against the enumerated output names, exact first and then as a
+case-insensitive substring, so a short fragment is enough. `null` or
+`"default"` takes whatever Qt calls the default output.
+
+A machine with a monitor's HDMI audio alongside its real speakers has no useful
+default — Qt may well pick the monitor, and a routine then plays to a device
+nobody is listening to with nothing to show for it. Name the output explicitly
+wherever more than one exists. The available names are written to the
+experiment log at startup for any configuration that has media instructions,
+and a name matching none of them is logged as a warning rather than silently
+falling back.
+
+Instruction files are also checked at startup: a routine whose file is missing
+is reported in the log then, instead of at the moment it fails to play, and a
+playback error raises a toast over the window as well.
+
 ## USRP block
 
 ```json
@@ -95,6 +164,26 @@ are flattened into global Tx and Rx indices in the order the devices appear, and
 
 Per-channel parameters are lists indexed by that device's local channel order.
 
+### Decimation
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `save_ds` | `100` | Averaging decimation applied in the process worker. |
+| `disp_ds` | `10` | Further window-averaging applied to the display payload. |
+
+Both are group-level keys, and **both divide the recorded rate**, because the
+client writes the file from the display stream:
+
+```
+recorded rate = samp_rate / (save_ds * disp_ds)
+```
+
+At the defaults that is 1 kHz from a 1 MHz acquisition. Any configuration meant
+to record should set `disp_ds` explicitly — the shipped `.bvi` examples use
+`disp_ds: 1` with `save_ds: 100`. The advertised `disp_freq`, and therefore the
+timebase written into the `.bvr` header, always reflects the real rate. See
+[the streaming path](../architecture/streaming.md).
+
 See [Channel maps and MIMO](channel-map.md) and
 [Signal schemes](signal-schemes.md).
 
@@ -124,6 +213,32 @@ See [Channel maps and MIMO](channel-map.md) and
 
 Parameters listed under `hardware` win over the top-level copy, so an edit made
 in the UI is written to both. See [BIOPAC](biopac.md).
+
+## Microphone block
+
+```json
+"MIC": {
+  "type": "MICROPHONE",
+  "samp_rate": 16000,
+  "channels": 1,
+  "device": "default",
+  "gain": 1.0,
+  "labels": ["Audio"]
+}
+```
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `samp_rate` | `16000` | Requested rate in Hz; negotiated down if the input refuses it. |
+| `channels` | `1` | A channel **count**, not BIOPAC's enable mask. |
+| `device` | `"default"` | Host input: `"default"`, a PortAudio index, a discovery key, or a substring of the host name. |
+| `blocksize` | `0` | Frames per callback; `0` picks a tenth of a second. Capped at 100 ms. |
+| `gain` | `1.0` | Applied per chunk. Adjustable while streaming. |
+| `labels` | — | Per-channel names. |
+
+Audio is emitted at full rate — saving is fed from the display stream, so
+decimating for display would decimate the recording too. See
+[Microphone](microphone.md).
 
 ## Dummy block
 

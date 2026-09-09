@@ -17,7 +17,9 @@ site_name: BioView
 site_url: https://bioview.readthedocs.io
 site_author: Aakash Kapoor
 site_description: >-
-  BioView is a versatile, extensible, and performant cross-platform app for biomedical and human-computer interface instrumentation control, including Ettus USRPs and BIOPAC devices.
+  BioView is a cross-platform acquisition application for biomedical and human-computer
+  interface instrumentation: Ettus USRPs, BIOPAC MP units and host audio inputs, driven
+  from one server and synchronized into a single self-describing recording.
 
 # Repository
 repo_name: bioview-docs
@@ -32,6 +34,8 @@ copyright: Copyright &copy; 2025 Aakash Kapoor
 # Configuration
 theme:
   name: material
+  # Overrides supply the announcement bar carrying the current release version.
+  custom_dir: overrides
   features:
     - announce.dismiss
     - content.code.annotate
@@ -65,15 +69,15 @@ theme:
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Switch to system preference
@@ -81,14 +85,22 @@ theme:
     text: Inter
     code: Inter Mono
   favicon: assets/icon.png
-  logo: assets/icon.png
+  logo: assets/favicon.svg
+
+extra_css:
+  - stylesheets/extra.css
 
 extra:
+  # Current release. Bumped by release.sh alongside every other version stamp;
+  # read by overrides/main.html for the announcement bar.
+  bioview_version: 0.9.6
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/meowkash
-    - icon: fontawesome/brands/python
-      link: https://pypi.org/project/bioview/
+      link: https://github.com/bioview
+      name: BioView on GitHub
+    - icon: material/download
+      link: https://github.com/bioview/bioview-installer/releases/latest
+      name: Download the latest installers
 
 # Extensions
 markdown_extensions:
@@ -118,8 +130,8 @@ markdown_extensions:
   - pymdownx.magiclink:
       normalize_issue_symbols: true
       repo_url_shorthand: true
-      user: squidfunk
-      repo: mkdocs-material
+      user: bioview
+      repo: bioview-docs
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.snippets
@@ -150,6 +162,7 @@ nav:
       - Changelog: about/changelog.md
       - How to upgrade: about/upgrading.md
   - Getting Started:
+    - Download: setup/downloads.md
     - Installation: setup/installation.md
     - Quick Start: usage/quickstart.md
   - Usage:
@@ -174,6 +187,7 @@ nav:
     - Supported Devices:
       - USRP: reference/usrp.md
       - BIOPAC: reference/biopac.md
+      - Microphone: reference/microphone.md
   - Contributing:
     - Guidelines:
       - Code Style: contributing/code-style.md

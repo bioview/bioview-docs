@@ -13,9 +13,12 @@ If `import uhd` fails, the USRP backend is recorded in `UNAVAILABLE_BACKENDS`
 with the reason and reported to the Configurator — it does not silently vanish
 from the device list.
 
-UHD's Windows binaries are built against NumPy 1.x. Importing them under
-NumPy 2.x works but prints a mismatch traceback from inside `import uhd`;
-BioView detects that and says plainly what it is.
+UHD is built against the NumPy 1.x ABI and its bindings declare
+`numpy>=1.11,<2.0`. Under NumPy 2 the transmit and receive workers deadlock on
+pybind11's lazy NumPy C-API import while holding the GIL, and the radio never
+answers `START_STREAMING`. All three BioView packages pin `numpy>=1.26,<2`;
+there is no runtime guard, because the environment is controlled and a warning
+printed by a GUI-spawned server is never read.
 
 ## Device names
 
@@ -100,6 +103,9 @@ waveforms.
   frame size is 1024.
 * Keeping the receive buffer small produces spikes in the data from filtering
   edge effects.
-* Starting a stream spawns transmit, receive and process workers per device. On
-  Windows each is a full process spawn, which is why `START_STREAMING` is
-  allowed 90 seconds server-side and 120 seconds on the wire.
+* Opening the radio is the expensive step, not starting the stream: `uhd.find`
+  alone takes seconds, and initialization is allowed 150 s. Start resumes
+  threads that already exist and is measured at about 0.4 s for a two-channel
+  device.
+* `save_ds` and `disp_ds` both divide the rate that reaches the recording, not
+  just the plot — see [the streaming path](../architecture/streaming.md).

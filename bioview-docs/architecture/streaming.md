@@ -1,7 +1,7 @@
 # The streaming path
 
 ```
-UHD recv  ->  rx queue  ->  process worker  -+->  save queue    ->  HDF5 (server, optional)
+UHD recv  ->  rx queue  ->  process worker  -+->  save queue    ->  save worker  (server; off)
                                              |
                                              +->  display queue ->  display worker
                                                                         |
@@ -12,6 +12,10 @@ UHD recv  ->  rx queue  ->  process worker  -+->  save queue    ->  HDF5 (server
                                                      client DataStreamer -+-> DataSaver (.bvr)
                                                                           +-> PlotGrid
 ```
+
+The server-side save branch is drawn because the code is there and tested, but
+no session reaches it: `server.py` sends `{"save_config": {"enable_save":
+False}}` with every `START_STREAMING`, because saving happens on the client.
 
 ## Chunks
 
@@ -44,6 +48,26 @@ them turns that failure mode into a bounded, countable drop.
 the two policies. Both return `False` when an item was dropped, so callers count
 drops rather than logging each one.
 
+## What the recorded rate actually is
+
+This follows from where the client tees the file off. `DataSaver` is fed from
+the client's data receiver, which receives the **display** stream, so both
+decimation stages apply to the recording:
+
+```
+recorded rate = samp_rate / (save_ds * disp_ds)
+```
+
+`save_ds` averages in the process worker; `disp_ds` window-averages the display
+payload on top of it. At the shipped defaults (`samp_rate` 1 MHz, `save_ds` 100,
+`disp_ds` 10) that is 1 kHz, not the 10 kHz `save_ds` alone would suggest.
+Configurations meant to record therefore set `disp_ds` deliberately — both
+shipped `.bvi` files use `disp_ds: 1` alongside `save_ds: 100`.
+
+The rate that reaches disk is also what each `DataSource` advertises as
+`disp_freq`, and that is what the `.bvr` header records, so a file is
+self-describing whatever the two divisors were.
+
 ## Display decimation
 
 Plot buffers are sized from each source's advertised display frequency
@@ -62,6 +86,14 @@ Stop does not tear anything down. The server pauses each backend's workers, the
 data connection stays open for the whole session, and the client's receiver
 idles until data resumes. Start resumes the same workers.
 
-Worker processes are only spawned on the first Start, which is why
-`START_STREAMING` gets a 90-second budget: on Windows each transmit, receive and
-process worker is a full process spawn.
+The workers are threads inside the backend process, constructed when the device
+is initialized and started paused, so Start is a set of `Event.set()` calls plus
+a short buffer-filling delay — about 0.4 s for a two-channel USRP.
+
+The order matters, though, and not for the obvious reason. Every thread is
+brought up before *any* of them is resumed. `Thread.start()` waits, without a
+timeout, for the new thread to be scheduled; starting one after the transmit and
+receive threads are already spinning inside UHD means queueing for the GIL
+behind two tight native loops, and the start never completes. The backend then
+never answers `START_STREAMING`, and the server tears down every other device in
+the session — so a perfectly healthy BIOPAC plots nothing either.

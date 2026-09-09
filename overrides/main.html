@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{#
+  Announcement bar carrying the current release. `bioview_version` in mkdocs.yml
+  is bumped by release.sh with every other version stamp, so this cannot drift
+  behind the installers the way a hand-edited page does.
+#}
+{% block announce %}
+  <a href="{{ 'setup/downloads/' | url }}">
+    <strong>BioView {{ config.extra.bioview_version }}</strong>
+    is out &mdash; installers for Windows, macOS and Linux
+  </a>
+{% endblock %}
