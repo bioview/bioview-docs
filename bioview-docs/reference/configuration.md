@@ -153,6 +153,7 @@ playback error raises a toast over the window as well.
       "if_filter_bw": 5000
     }
   },
+  "components": ["amplitude", "phase"],
   "channel_map": { "layout": "full_nxn", "dpic": [] }
 }
 ```
@@ -163,6 +164,17 @@ are flattened into global Tx and Rx indices in the order the devices appear, and
 `channel_map` and `dpic` are written in those global indices.
 
 Per-channel parameters are lists indexed by that device's local channel order.
+
+### Streamed components
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `components` | `["amplitude"]` | Which derived quantities each Tx/Rx pair streams. |
+
+`["amplitude", "phase"]` advertises two sources per pair — `Tx1Rx1` and
+`Tx1Rx1_Phase` — and records both. Because the file is written from the streamed
+rows, phase that was not streamed cannot be recovered from the recording later.
+See [Channel maps and MIMO](channel-map.md#amplitude-and-phase).
 
 ### Decimation
 

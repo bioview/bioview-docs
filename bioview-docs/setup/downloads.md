@@ -18,8 +18,7 @@ to a GitHub Release. The current release is **0.9.6**.
 | Platform | Asset | Notes |
 | --- | --- | --- |
 | Windows 10/11, x64 | `BioView-0.9.6-Setup.exe` | Inno Setup installer. Includes the UHD driver and FPGA images. |
-| macOS, Apple Silicon | `BioView-0.9.6-arm64.dmg` | Built on macOS 14. |
-| macOS, Intel | `BioView-0.9.6-x86_64.dmg` | Built on macOS 13. |
+| macOS, Apple Silicon | `BioView-0.9.6-arm64.dmg` | Built on macOS 14. Intel Macs are not supported. |
 | Linux, x86_64 | `BioView.flatpak` | Single-file bundle; needs a Flatpak runtime. |
 
 Each bundle is self-contained: `bioview-common`, `bioview-server`,

@@ -77,12 +77,26 @@ default:
 
 | Message | When |
 | --- | --- |
+| `Searching the network for BioView servers…` | Scan pressed |
+| `Found n BioView server(s)` / `No BioView servers found` | That scan finished |
+| `Connecting to <server>…` | A connection attempt started |
+| `Connected to <server>` | The handshake succeeded |
+| `Disconnected from server` | The connection ended |
+| `The server stopped responding` | The server went away by itself |
 | `Initialization started…` | Initialize pressed; stays up until it finishes |
+| `Connecting <group>…` / `<group> connected` | Each group, as the server reaches it |
+| `<group> failed: <reason>` | That group did not come up |
 | `Initialized successfully!` | Every device group came up |
 | `Initialized with errors (n/m device groups ready)` | Some came up, some did not |
 | `Initialization failed` | No device group came up |
 | `Discovering devices…` | Discover pressed |
+| `Balancing <group>: <sweep> n/m` | A DPIC balance is running |
+| `Balanced <group>` / `Balance failed on <group>` | That balance finished |
 | `Streaming started` / `Streaming stopped` | The stream changed state |
+
+Background rescans are silent. While the Monitor is disconnected it re-scans
+every few seconds by itself; announcing each would put "No BioView servers
+found" on screen on a loop. Only a scan the user pressed for is reported.
 
 Each level has its own colour: blue for something in progress, green for
 success, red for failure, orange for a warning, and a muted yellow for the
@@ -93,10 +107,50 @@ right.
 A message about something still running stays up until it is replaced; a
 finished-state message clears itself after four seconds.
 
+### Still working
+
+An operation that has a normal duration and a duration that means something is
+wrong cannot say so with one fixed string — an unchanging message is
+indistinguishable from a hang. `show_activity` takes an optional
+`slow_message` / `slow_after_ms`, and replaces the first wording with the
+second if the operation is still running by then ("Still connecting to lab-pc —
+check that the server is running and reachable"). The escalation is cancelled by
+the next message of any kind, so the second wording can only appear while the
+first is still true.
+
+Each operation carries its own threshold, because a handshake is slow at six
+seconds and a USRP initialization is not slow at thirty:
+
+| Operation | Escalates after |
+| --- | --- |
+| Connecting to a server | 6 s |
+| Scanning the network | 8 s |
+| Discovering devices | 15 s |
+| Initializing devices | 30 s |
+| DPIC balance | 20 s |
+
 A **partial** initialization also raises a modal naming each group that failed
 and why, using the same wording the log and the Configurator use. Nothing else
 distinguishes a half-initialized rig from a healthy one until a plot stays flat,
 and discovery is excluded — a device merely absent from a scan is not a failure.
+A command that fails outright — no group reaches any state at all — raises the
+same kind of modal with whatever reasons the server sent, so the one case that
+had no explanation now has one.
+
+### Server-level faults
+
+A backend that would not load, or a UHD that does not match its bindings, is a
+fault of the *server*, not of any one device group. The server reports which
+backends loaded with its identity, so both windows learn about it the moment
+they connect, and both raise the same modal — wording from
+`known_issues.json`, raw error behind **Show Details**, each distinct fault
+shown once per window.
+
+The two windows differ only in what concerns them. The Configurator raises
+every backend fault: setting up hardware is the only thing it does. The Monitor
+raises only the ones whose device type its configuration actually uses, so a
+BIOPAC driver that will not load is not put in front of someone running two
+radios and no BIOPAC.
 
 ## Mark Event
 

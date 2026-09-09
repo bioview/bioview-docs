@@ -65,6 +65,7 @@ an overlay, not a scheme, so it composes with CW, FMCW and pulsed Doppler alike.
   "enabled": false,
   "shape": "triangle",
   "num_pulses": 5,
+  "pulse_duration_s": 0.1,
   "packet_spacing_s": 1.0,
   "envelope_freq_hz": 10.0,
   "modulation_depth": 0.2,
@@ -77,13 +78,27 @@ an overlay, not a scheme, so it composes with CW, FMCW and pulsed Doppler alike.
 | --- | --- |
 | `shape` | `triangle`, `sawtooth` or `rectangle`. |
 | `num_pulses` | Pulses per burst packet. |
-| `packet_spacing_s` | Period between burst packets. |
-| `envelope_freq_hz` | Shape frequency within a burst. |
+| `pulse_duration_s` | Duration of one pulse, i.e. the shape's period. |
+| `packet_spacing_s` | Period between burst packets: burst start to burst start. |
+| `envelope_freq_hz` | Shape frequency, used only when `pulse_duration_s` is absent. |
 | `modulation_depth` | AM depth applied to the carrier. |
 | `inject_channels` | **Global** Tx indices that carry the burst. |
 | `record_reference` | Advertise a `CalRef_*` source per injecting Tx. |
 
-Two things to know:
+A burst lasts `num_pulses * pulse_duration_s` and repeats every
+`packet_spacing_s`; the remainder of that interval is silence. A burst longer
+than its own repeat interval is clamped to it. `pulse_duration_s` and
+`envelope_freq_hz` name the same quantity from opposite ends — the duration
+wins when both are given, and the default 0.1 s is exactly `1 / 10 Hz`, so the
+two agree out of the box. `envelope_freq_hz` is kept because that is what the
+reference `B210_2CHANNEL` calls it.
+
+Three things to know:
+
+* **The burst timings are live.** `num_pulses`, `pulse_duration_s` and
+  `packet_spacing_s` are spin boxes on the RF settings panel's second
+  calibration row, alongside the shape and depth, and take effect on the next
+  Tx buffer.
 
 * **`inject_channels` is in global Tx indexing** but a scheme only ever sees its
   own device's channels, so the factory always translates it — the default `[0]`

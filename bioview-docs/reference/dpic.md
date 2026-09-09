@@ -43,11 +43,13 @@ two, and the characteristic rise-and-fall of the phase sweep never appears on
 the plot.
 
 241 measurements per pair, ~53 s of them dwell and chunk waits. `time_budget_s`
-caps the wall clock and is split across pairs; the shipped configuration default
-is 120 s (the balancer class itself defaults to 300 s if no configuration says
-otherwise). A sweep that runs out of budget stops where it is and keeps the best
-point found so far, and says so — the result is then marked `truncated` and
-logged as a warning rather than passed off as a completed search.
+caps the wall clock and is split across the pairs *on one radio* (see
+[Radios are balanced together](#radios-are-balanced-together)); the shipped
+configuration default is 120 s (the balancer class itself defaults to 300 s if
+no configuration says otherwise). A sweep that runs out of budget stops where it
+is and keeps the best point found so far, and says so — the result is then
+marked `truncated` and logged as a warning rather than passed off as a completed
+search.
 
 The VI's Rx-gain step ("tune Rx gain to a DC value of ~0.5") runs on either
 side of the search, through the channel's `auto_gain_rx` callback: before,
@@ -180,6 +182,30 @@ derived from the first stored component: under `save_iq` that is `mean(Re{·})`,
 a signed quantity whose minimum is the most negative excursion rather than a
 null.
 
+## Radios are balanced together
+
+Every cancellation loop in a device group used to be balanced one after
+another, with the time budget divided between all of them: a four-radio group
+waited four times as long *and* gave each search a quarter of the budget.
+
+The loops on different radios are physically independent — separate Tx chains,
+separate Rx chains — so `balance_all` groups them into one lane per radio,
+runs the lanes concurrently, and runs each lane's loops in series. Two loops on
+one radio still contend for its channels, so they stay in one lane. A lane
+divides the budget between its own loops only, so a one-loop lane gets the
+whole of it.
+
+Which radio a loop belongs to is `DpicChannel.device`, taken from the inject
+Tx: that is the channel the search actually drives.
+
+Set `"parallel_devices": false` for a rig where the radios are *not* in fact
+independent — a shared LO, a shared antenna — in which case the old serial
+behaviour is what is wanted.
+
+Results are re-ordered into the configuration's pair order on the way out,
+whichever lane finished first, so the log, the report and the saved
+`last_results` are unaffected by the timing.
+
 ## Configuration
 
 ```json
@@ -197,7 +223,8 @@ null.
   "coarse_amp_step": 0.05,
   "coarse_probe_amplitude": 0.1,
   "phase_step_deg": 0.2,
-  "amp_step": 0.001
+  "amp_step": 0.001,
+  "parallel_devices": true
 }
 ```
 

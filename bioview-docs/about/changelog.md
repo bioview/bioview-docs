@@ -11,6 +11,15 @@ covered on [Download](../setup/downloads.md).
 
 ## Unreleased
 
+* **USRP groups can stream amplitude and phase together.** `components` on a
+  USRP block names the derived quantities each Tx/Rx pair emits;
+  `["amplitude", "phase"]` advertises two sources per pair — `Tx1Rx1` and
+  `Tx1Rx1_Phase` — demodulated together from the same chunk. Both quantities
+  were always computed, but only one of them could leave the process worker,
+  and since the `.bvr` is written from the streamed rows, the other was
+  unrecoverable from the recording. Defaults to amplitude only, with the same
+  labels and channel numbers as before; the older `display_imaginary: true` is
+  still honoured as `["phase"]` when `components` is absent.
 * **Microphone backend.** Host audio input through PortAudio, as a device rather
   than a side channel: one row per captured channel down the ordinary display
   path, so speech is recorded sample-aligned with the RF and physiological rows

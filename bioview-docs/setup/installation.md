@@ -16,7 +16,7 @@ and that is what the list below really describes.
 | --- | --- | --- | --- |
 | Windows 10/11 (x64) | Yes | Yes | Yes |
 | Ubuntu LTS, Debian stable and derivatives | Yes | No | Yes |
-| macOS (Apple Silicon and Intel) | Yes | No | Yes |
+| macOS (Apple Silicon) | Yes | No | Yes |
 
 BIOPAC support is Windows-only because BHAPI is. Fedora, RHEL and their
 derivatives are untested: they have no prebuilt UHD Python bindings, so UHD has

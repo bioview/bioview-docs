@@ -53,6 +53,41 @@ An explicit list of Tx/Rx pairs, each optionally named:
 }
 ```
 
+## Amplitude and phase
+
+Every Tx/Rx pair is demodulated to a complex baseband, from which the pipeline
+derives two real quantities: the normalized magnitude and the unwrapped angle
+in radians with the static Tx phase removed. `components` chooses which of them
+the group streams:
+
+```json
+"components": ["amplitude", "phase"]
+```
+
+Each pair then advertises **two** sources rather than one, adjacent in channel
+order — `Tx1Rx1` and `Tx1Rx1_Phase`. The amplitude row keeps the bare label, so
+a configuration that does not set `components` is unchanged: amplitude only,
+same labels, same channel numbers.
+
+Both rows are demodulated together from the same chunk, so the phase is exactly
+the angle of the sample whose magnitude sits beside it — there is no second
+pass and no chance of the two drifting apart.
+
+!!! note "This is what gets recorded"
+
+    `display_sources` only decides which sources open a plot. The `.bvr` is
+    written from the streamed rows, so **a component that is not in
+    `components` is not in the recording** — there is no way to recover phase
+    afterwards from an amplitude-only file. `display_sources` can name a
+    subset; `components` cannot.
+
+The older `display_imaginary: true` swapped a group's single row from amplitude
+to phase. It still does when `components` is absent, and is equivalent to
+`"components": ["phase"]`. Prefer the explicit form.
+
+Under `save_iq: true` the same two slots carry I and Q instead of magnitude and
+angle; the `_Phase` label then names the quadrature row.
+
 ## Injection channels are not sources
 
 Any Tx named as an `inject_tx` in `dpic` is excluded from the measurement set.
