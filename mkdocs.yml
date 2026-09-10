@@ -20,8 +20,11 @@ site_description: >-
   BioView is a cross-platform acquisition application for biomedical and human-computer interface instrumentation.
 
 # Repository
-repo_name: bioview-docs
-repo_url: https://github.com/bioview/bioview-docs
+repo_name: bioview
+repo_url: https://github.com/bioview
+# The header link points at the organisation, not a single repository, so no
+# per-page edit links can be derived from it.
+edit_uri: ""
 
 # Source of documentation pages
 docs_dir: bioview-docs
@@ -91,7 +94,7 @@ extra_css:
 extra:
   # Current release. Bumped by release.sh alongside every other version stamp;
   # read by overrides/main.html for the announcement bar.
-  bioview_version: 0.9.6
+  bioview_version: 0.9.7.2
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/bioview
