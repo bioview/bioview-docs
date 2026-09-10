@@ -104,6 +104,8 @@ extra:
 markdown_extensions:
   - abbr
   - admonition
+  - pymdownx.details
+  - pymdownx.superfences
   - attr_list
   - def_list
   - footnotes
@@ -153,14 +155,13 @@ nav:
   - Home:
     - index.md
     - Overview: home/overview.md
+    - Installation: home/installation.md
     - Troubleshooting: home/troubleshooting.md
     - License: home/license.md
     - Versions:
       - Changelog: home/changelog.md
       - How to upgrade: home/upgrading.md
   - Getting Started:
-    - Download: setup/downloads.md
-    - Installation: setup/installation.md
     - Quick Start: usage/quickstart.md
   - Usage:
     - usage/index.md

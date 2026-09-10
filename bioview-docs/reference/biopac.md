@@ -65,22 +65,6 @@ scrolls slowly, because the samples that do arrive are stretched across an
 x-axis drawn from the *nominal* rate. BioView measures the achieved rate in the
 polling path and warns when it drifts too far behind real time.
 
-## Memory Integrity
-
-The most common reason a BIOPAC unit is discovered but will not open is Windows
-**Memory Integrity** (hypervisor-enforced code integrity) refusing the BIOPAC
-driver. BioView checks for it when reporting the failure and says so.
-
-Note the distinction the check draws: turning Memory Integrity off leaves it
-*configured off but still running* until the machine restarts. The policy
-registry key reports only the configured value and would suggest the problem was
-solved while the driver is still being refused. The remedy in that state is a
-reboot, not another settings change.
-
-The query is bounded and cached — it only ever runs to explain a failure, so it
-must not become one. It runs in the server process, not the backend subprocess,
-where the underlying WMI call has been seen to hang indefinitely.
-
 ## BHAPI reference
 
 | Function | Description |
