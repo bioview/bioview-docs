@@ -12,6 +12,6 @@ If you are looking to install BioView, head over to our instructions on [getting
 
 BioView is an open-source software meant to help researchers acquire data seamlessly without worrying about too many setup details. If this work helps your research, please cite BioView using the following -
 
-## License
+*Coming Soon*
 
 BioView is freely distributed under the [GPL-v3.0 License](/about/license).

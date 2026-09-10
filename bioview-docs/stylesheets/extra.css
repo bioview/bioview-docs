@@ -14,6 +14,10 @@
   --md-primary-fg-color--light: #1e293b;
   --md-primary-fg-color--dark: #0b1120;
   --md-accent-fg-color: #0284a8;
+  /* Material derives link colour from the primary colour, which here is the
+     near-black brand ground: links would read as plain body text. Pin them to
+     a darkened pulse blue instead, dark enough to clear AA on white. */
+  --md-typeset-a-color: #0272a3;
 }
 
 [data-md-color-scheme="slate"] {
@@ -22,6 +26,36 @@
   --md-primary-fg-color--dark: #0b1120;
   --md-accent-fg-color: var(--bioview-pulse-end);
   --md-typeset-a-color: var(--bioview-pulse-start);
+
+  /* Material's stock slate is a mid grey-blue. Drop the whole surface stack to
+     near-black so the pulse gradient and the app screenshots carry the colour
+     on the page rather than competing with a lifted background. */
+  --md-default-bg-color: #05070c;
+  --md-default-bg-color--light: #05070ca8;
+  --md-default-bg-color--lighter: #05070c52;
+  --md-default-bg-color--lightest: #05070c1f;
+  --md-code-bg-color: #0d1220;
+  --md-footer-bg-color: #01030699;
+  --md-footer-bg-color--dark: #010306;
+
+  /* Body text and, more importantly, headings: Material renders headings in
+     --md-default-fg-color--light, which is washed out against a background
+     this dark. */
+  --md-default-fg-color: #e8edf6;
+  --md-default-fg-color--light: #c3ccdb;
+  --md-default-fg-color--lighter: #7c8798;
+  --md-default-fg-color--lightest: #3a4250;
+}
+
+/* Headings sit above the body copy in weight and brightness, in both schemes,
+   but the difference only actually matters on the dark ground. */
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3,
+[data-md-color-scheme="slate"] .md-typeset h4,
+[data-md-color-scheme="slate"] .md-typeset h5,
+[data-md-color-scheme="slate"] .md-typeset h6 {
+  color: #ffffff;
 }
 
 /* The announcement bar is the only place the release version appears on every
@@ -49,4 +83,12 @@
    not wrap mid-name. */
 .md-typeset table:not([class]) td code {
   white-space: nowrap;
+}
+
+/* Read the Docs injects its own version flyout in the bottom corner. The
+   announcement bar already states the current release, so the flyout is a
+   second, conflicting version affordance over the page content. */
+readthedocs-flyout,
+.rst-versions {
+  display: none !important;
 }
