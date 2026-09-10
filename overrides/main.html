@@ -6,8 +6,5 @@
   behind the installers the way a hand-edited page does.
 #}
 {% block announce %}
-  <a href="{{ 'setup/downloads/' | url }}">
-    <strong>BioView {{ config.extra.bioview_version }}</strong>
-    is out &mdash; installers for Windows, macOS and Linux
-  </a>
+  The latest version of BioView is v{{ config.extra.bioview_version }}. Get it <strong><a href="{{ 'setup/downloads/' | url }}">here</a></strong>
 {% endblock %}

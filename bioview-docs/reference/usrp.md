@@ -109,3 +109,17 @@ waveforms.
   device.
 * `save_ds` and `disp_ds` both divide the rate that reaches the recording, not
   just the plot — see [the streaming path](../architecture/streaming.md).
+
+
+## Signal processing
+
+* **Signal schemes.** CW, FMCW and pulsed Doppler, sharing one base class so the
+  receive pipeline, live parameter updates and the calibration overlay work
+  identically across them.
+* **Calibration overlay.** A gated AM burst envelope that composes with any
+  scheme, toggleable while streaming, with an optional recorded reference row per
+  injecting transmitter.
+* **DPIC.** Direct-path interference cancellation by a four-sweep coarse-to-fine
+  search over injection phase and amplitude — a port of the reference LabVIEW VI,
+  including its dwell times. Run on demand or automatically at Start; it is
+  asynchronous end to end, so Stop stays live throughout and aborts it.

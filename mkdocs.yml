@@ -17,9 +17,7 @@ site_name: BioView
 site_url: https://bioview.readthedocs.io
 site_author: Aakash Kapoor
 site_description: >-
-  BioView is a cross-platform acquisition application for biomedical and human-computer
-  interface instrumentation: Ettus USRPs, BIOPAC MP units and host audio inputs, driven
-  from one server and synchronized into a single self-describing recording.
+  BioView is a cross-platform acquisition application for biomedical and human-computer interface instrumentation.
 
 # Repository
 repo_name: bioview-docs
@@ -29,7 +27,7 @@ repo_url: https://github.com/bioview/bioview-docs
 docs_dir: bioview-docs
 
 # Copyright
-copyright: Copyright &copy; 2025 Aakash Kapoor
+copyright: Copyright &copy; 2026 Aakash Kapoor
 
 # Configuration
 theme:
@@ -152,15 +150,14 @@ markdown_extensions:
 
 # Page tree
 nav:
-  - About:
+  - Home:
     - index.md
-    - Features: about/features.md
-    - Performance: about/considerations.md
-    - Troubleshooting: about/troubleshooting.md
-    - License: about/license.md
+    - Overview: home/overview.md
+    - Troubleshooting: home/troubleshooting.md
+    - License: home/license.md
     - Versions:
-      - Changelog: about/changelog.md
-      - How to upgrade: about/upgrading.md
+      - Changelog: home/changelog.md
+      - How to upgrade: home/upgrading.md
   - Getting Started:
     - Download: setup/downloads.md
     - Installation: setup/installation.md
