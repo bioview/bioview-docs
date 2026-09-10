@@ -179,10 +179,5 @@ nav:
       - BIOPAC: reference/biopac.md
       - Microphone: reference/microphone.md
   - Contributing:
-    - Guidelines:
-      - Code Style: contributing/code-style.md
-      - Development Setup: contributing/build-instructions.md
-    - Reporting Issues:
-      - Bugs: contributing/bug-report.md
-      - Documentation Issue: contributing/docs-issue.md
-      - Feature Change/Request: contributing/feature-request.md
+    - Guidelines: contributing/guidelines.md
+    - Reporting Bugs and Issues: contributing/reporting.md
