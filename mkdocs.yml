@@ -156,17 +156,9 @@ nav:
     - index.md
     - Overview: home/overview.md
     - Installation: home/installation.md
+    - Quickstart: home/quickstart.md
     - Troubleshooting: home/troubleshooting.md
     - License: home/license.md
-    - Versions:
-      - Changelog: home/changelog.md
-      - How to upgrade: home/upgrading.md
-  - Getting Started:
-    - Quick Start: usage/quickstart.md
-  - Usage:
-    - usage/index.md
-    - Running a Session: usage/session.md
-    - Configurator: usage/configurator.md
   - Architecture:
     - architecture/index.md
     - Launching: architecture/launching.md

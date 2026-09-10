@@ -1,7 +1,6 @@
-# Quick start
+# Quickstart
 
-Assumes BioView is installed — from an [installer](../setup/downloads.md) or
-[from source](../setup/installation.md).
+This assumes BioView is installed already.
 
 ## 1. Open the Monitor
 
@@ -30,11 +29,7 @@ pass it directly:
 bioview --config-file my_experiment.bvi
 ```
 
-Configurations are JSON; `.bvi` is the conventional extension, and on Windows
-the installer associates it with the Monitor, so double-clicking one opens it
-directly.
-
-A minimal file with a single USRP:
+While JSON configurations can also be provied, `.bvi` is the recommended extension. An example of minimal file with a single USRP is below:
 
 ```json
 {
@@ -65,16 +60,8 @@ A minimal file with a single USRP:
 }
 ```
 
-`MyB210` must be a device name the server can resolve. Use the
-[Configurator](configurator.md) to see what is attached and to assign names.
-
-`save_ds` and `disp_ds` together set the recorded rate — 1 MHz / (100 × 1) =
-10 kHz here. Both divide it, because the recording is written from the display
-stream; leaving `disp_ds` at its default of 10 would have recorded 1 kHz. See
-[the streaming path](../architecture/streaming.md).
-
-No hardware to hand? Swap the device block for a `DUMMY` one and everything
-below still works, calibration and DPIC included.
+!!! info "Device Choice"
+    `MyB210` must be a device name the server can resolve. Use the [Configurator](configurator.md) to see what is attached and to assign names.
 
 ## 3. Initialize
 

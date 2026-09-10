@@ -1,5 +1,8 @@
 # Installation
 
+!!! tip "Upgrading BioView"
+    Whenever a new version of BioView is released, you can simply use a new installer to upgrade in-place.
+
 ## Downloads
 
 Pre-built binaries are built using GitHub CI/CD and available on the [Releases](https://github.com/bioview/bioview-installer/releases) page. Download the installer corresponding to your operating system. *If your OS warns about BioView being a potentially harmful file, allow it to run anyway. We are working on getting code-signing certificates being made available to us.*
