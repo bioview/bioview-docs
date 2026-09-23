@@ -94,7 +94,7 @@ extra_css:
 extra:
   # Current release. Bumped by release.sh alongside every other version stamp;
   # read by overrides/main.html for the announcement bar.
-  bioview_version: 0.9.7.3
+  bioview_version: 0.9.8
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/bioview
